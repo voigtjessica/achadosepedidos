@@ -22,4 +22,4 @@ y$conteudo <- gsub(";", ",", y$conteudo)
 
 
 write.table(y, file="pendencias_resolv.csv", 
-            sep=";", row.names=F, na="", quote = F)
+            sep=";", row.names=F, na="", quote = T)
