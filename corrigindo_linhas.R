@@ -10,7 +10,7 @@ pendencias <- fread("Pendencias_CGU_importador.csv", encoding="UTF-8")
 
 # Tutorial com gsub e loops : http://www.endmemo.com/program/R/gsub.php
 
-# Substituindo ; e " 
+# Substituindo ; e "
 
 y <- pendencias %>%
   mutate(protocolo = as.character(protocolo),
