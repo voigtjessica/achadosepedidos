@@ -12,7 +12,9 @@ pendencias <- fread("Pendencias_CGU_importador.csv", encoding="UTF-8")
 
 # Substituindo ; e " 
 
-y <- pendencias 
+y <- pendencias %>%
+  mutate(protocolo = as.character(protocolo),
+         data = as.character(data))
 
 y$Erro <- gsub("[[:punct:]]", "", y$Erro) 
 y$interac <- gsub("[[:punct:]]", "", y$interac) 
