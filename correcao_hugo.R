@@ -156,3 +156,63 @@ cgu_com_recurso_templ[] <- lapply(cgu_com_recurso_templ, gsub, pattern=';', repl
 
 write.table(cgu_com_recurso_templ, file="pedidos_cgu_2017_com_recurso.csv", 
             sep=";", row.names=F, na="", quote = T, fileEncoding = "UTF-8")
+
+##Recursos no template
+recursos <- recursos %>%
+  mutate(DataRegistro= as.Date(DataRegistro, "%d/%m/%Y"))
+
+
+recursos_templ <- recursos %>%
+  gather(interac, conteudo, DescRecurso, RespostaRecurso) %>%
+  mutate(id = "",
+         protocolo = ProtocoloPedido,
+         titulo = "",
+         conteudo = conteudo,
+         interac = interac,
+         data = ifelse(interac == "DetalhamentoSolicitacao", DataRegistro, DataResposta),
+         prorrog = "",
+         orgao = OrgaoDestinatario,
+         status = TipoResposta,
+         sit = Situacao,
+         uf = "",
+         munic = "",
+         esf = "Executivo",
+         niv = "Federal",
+         pastanx = "",
+         nomeanex = "") %>%
+  select(id,protocolo,titulo,conteudo,interac,data,prorrog,orgao,status,sit,uf,munic,esf,niv,pastanx,
+         nomeanex, Instancia) %>%
+  mutate(data= as.Date(data, "%d/%m/%Y"))
+
+recursos_templ <- recursos_templ %>%
+  arrange(protocolo) %>%
+  group_by(protocolo, interac) %>%
+  arrange(data) %>%
+  mutate(contagem_instancia = 1:n(),
+         instancia_final = case_when(contagem_instancia == 1 & interac == "DescRecurso" ~ "Recurso - 1ª Instância",
+                                     contagem_instancia == 1 & interac == "RespostaRecurso" ~ "Resposta do Recurso - 1ª Instância",
+                                     contagem_instancia == 2 & interac == "DescRecurso" ~ "Recurso - 2ª Instância",
+                                     contagem_instancia == 2 & interac == "RespostaRecurso" ~ "Resposta do Recurso - 2ª Instância",
+                                     contagem_instancia == 3 & interac == "DescRecurso" ~ "Recurso - 3ª Instância",
+                                     contagem_instancia == 3 & interac == "RespostaRecurso" ~ "Resposta do Recurso - 3ª Instância",
+                                     contagem_instancia == 4 & interac == "DescRecurso" ~ "Recurso - 4ª Instância",
+                                     contagem_instancia == 4 & interac == "RespostaRecurso" ~ "Resposta do Recurso - 4ª Instância")) %>%
+  ungroup() %>%
+  mutate(interac = instancia_final) %>%
+  select(-Instancia, -instancia_final, -contagem_instancia)
+
+recursos_templ <- recursos_templ %>%
+  mutate(status = gsub("Parcialmente deferido", "Parcialmente Atendido", status),
+         status = gsub("Deferido", "Atendido", status),
+         status = gsub("Indeferido", "Não Atendido", status),
+         status = gsub("Perda de objeto", "Não Atendido", status),
+         status = gsub("Acolhimento", "Atendido", status),
+         status = gsub("Perda de objeto parcial", "Parcialmente Atendido", status),
+         status = gsub("Não conhecimento", "Não Atendido", status),
+         status = gsub("Não Atendido parcial", "Parcialmente Atendido", status),
+         sit = gsub("Respondido", "Finalizado", sit))
+
+recursos_templ[] <- lapply(recursos_templ, gsub, pattern=';', replacement='/')
+
+write.table(recursos_templ, file="recursos_cgu.csv", 
+            sep=";", row.names=F, na="", quote = T, fileEncoding = "UTF-8")
